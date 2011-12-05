@@ -1,5 +1,6 @@
 [haxe]: http://haxe.org
 [mongo]: http://www.mongodb.org/
+[nodejs]: http://nodejs.org
 
 # MongoDB object store for [Node.js][nodejs] in [Haxe][haxe]
 

@@ -1,0 +1,20 @@
+# Nodejs
+--macro RTTI.generate()
+-debug
+
+# -main UTests
+-main database.MongoTest
+
+-lib utest
+-lib robothaxe
+-lib remoting
+-lib nodejs
+-lib hydrax
+
+-D nodejs
+
+-cp src
+-cp test
+
+-js build/nodejs_test.js
+# -cmd node build/nodejs_test.js

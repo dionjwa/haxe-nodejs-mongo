@@ -1,0 +1,13 @@
+# Nodejs
+--macro RTTI.generate()
+-debug
+-main UTests
+-lib utest
+-lib robothaxe
+-lib nodejs
+-lib remoting
+-D nodejs
+-cp src
+
+-cp test
+-js build/nodejs_test.js

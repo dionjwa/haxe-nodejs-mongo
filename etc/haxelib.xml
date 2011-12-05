@@ -1,0 +1,10 @@
+<project name="nodejs-mongo" url="https://github.com/dionjwa/haxe-nodejs-mongo" license="BSD">
+        <user name="dionjwa"/>
+        <description>MongoDB Node.js externs and object store to add, index, and retrieve Haxe objects.</description>
+        <version name="0.1">Initial import</version>
+        <depends name="remoting"/>
+        <depends name="nodejs"/>
+        <tag v="nodejs"/>
+        <tag v="mongo"/>
+        <tag v="js"/>
+</project>

@@ -141,9 +141,6 @@ class MongoTools
 		});
 	}
 	
-	/**
-	  * id: The internal Mongo key, NOT the per object id
-	  */
 	public static function load<T>(pool :MongoPool, type :Class<T>, id :Dynamic, cb :MongoErr->T->Void) :Void
 	{
 		//If the id is a String with length 24, convert to native ObjectID
@@ -258,7 +255,7 @@ class MongoTools
 	/**
 	  * If the object had a String _id of length 24, convert to a native ObjectID
 	  */
-	static function classToDoc (obj :Dynamic) :Dynamic
+	inline static function classToDoc (obj :Dynamic) :Dynamic
 	{
 		var rec :MongoObj = Serialization.classToDoc(obj);
 		if (Reflect.field(obj, "_id") != null) {
@@ -273,10 +270,9 @@ class MongoTools
 		return rec;
 	}
 	
-	static function docToClass (rec :Dynamic, cls :Class<Dynamic>) :Dynamic
+	inline static function docToClass (rec :Dynamic, cls :Class<Dynamic>) :Dynamic
 	{
-		var obj = Serialization.docToClass(rec, cls);
-		return obj;
+		return Serialization.docToClass(rec, cls);
 	}
 	
 	static var EMPTY_ARRAY :Array<Dynamic> = [];

@@ -2,14 +2,13 @@
 --macro RTTI.generate()
 -debug
 
-# -main UTests
--main database.MongoTest
+-main Tests
 
--lib utest
 -lib robothaxe
--lib remoting
+# -lib remoting
 -lib nodejs
--lib hydrax
+-lib html5
+-lib transition9
 
 -D nodejs
 
@@ -17,4 +16,3 @@
 -cp test
 
 -js build/nodejs_test.js
-# -cmd node build/nodejs_test.js

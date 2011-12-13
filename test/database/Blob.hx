@@ -1,6 +1,6 @@
 package database;
 
-class DBStore
+class Blob
 	implements haxe.rtti.Infos
 {
 	#if nodejs
@@ -14,15 +14,20 @@ class DBStore
 	public var _id :String;
 	public var a :Int;
 	public var b :String;
+	public var c :Array<Int>;
+	public var d :Array<String>;
+	public var e :Array<Date>;
+	public var f :Array<Hash<String>>;
 	
 	public function new ()
 	{
-		a = 1;
-		b = "crap";
+		// a = 1;
+		// b = "crap";
 	}
 	
 	public function toString () :String
 	{
-		return "[DBStore _id=" + _id + ", a=" + a + ", b=" + b + "]";
+		return JSON.stringify(this);
+		// return "[DBStore _id=" + _id + ", a=" + a + ", b=" + b + "]";
 	}
 }

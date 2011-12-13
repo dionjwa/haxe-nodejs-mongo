@@ -1,6 +1,6 @@
 package js.node.mongo;
 
-import haxe.serialization.Serialization;
+import org.transition9.serialization.Serialization;
 
 import js.node.mongo.Mongo;
 
@@ -67,7 +67,7 @@ class MongoTools
 				
 				var keys :Array<String> = [];
 				
-				var meta :MongoMeta = {skip:0, limit:0, sort:null};
+				var meta :MongoMeta = {skip:0, limit:0, sort:{_id:1}};
 				
 				collection.find({}, {_id:1}, meta, function (err :MongoErr, cursor :Cursor) {
 					cursor.each(function (err :MongoErr, rec :MongoObj) {
@@ -99,8 +99,30 @@ class MongoTools
 					if (returnIfError(err, cb, pool, c)) return;
 					
 					pool.returnConnection(c);
-					Reflect.setField(obj, "_id", rec._id);	
+					Reflect.setField(obj, "_id", rec._id);
+					// trace("created " + klsName + ", returning " + obj);
 					cb(null, obj);
+				});
+			});
+		});
+	}
+	
+	public static function add <T>(pool :MongoPool, obj :Dynamic, cb :MongoErr->Dynamic->Void) :Void
+	{
+		var type = Type.getClass(obj);
+		var klsName = Type.getClassName(type);
+		pool.connection(function (c :Database) {
+			c.collection(klsName, function (err :MongoErr, collection :Collection) {
+				if (returnIfError(err, cb, pool, c)) return;
+				
+				var rec :MongoObj = classToDoc(obj);
+				
+				collection.insert(rec, function (err :MongoErr, inserted :MongoObj) {
+					if (returnIfError(err, cb, pool, c)) return;
+					
+					pool.returnConnection(c);
+					Reflect.setField(obj, "_id", rec._id);	
+					cb(null, rec._id);
 				});
 			});
 		});
@@ -116,9 +138,9 @@ class MongoTools
 				
 				var rec :MongoObj = classToDoc(obj);
 				
-				collection.update({_id:rec.id}, rec, null, function (err :MongoErr, rec :MongoObj) {
+				collection.save(rec, EMPTY_OPTIONS, function (err :MongoErr, updated :MongoObj) {
 					if (returnIfError(err, cb, pool, c)) return;
-					
+				
 					pool.returnConnection(c);
 					cb(null, true);
 				});
@@ -147,7 +169,7 @@ class MongoTools
 		switch(Type.typeof(id)) {
 			case TClass(c):
 				if (c == String && id.length == 24) {
-					id = Mongo.ObjectID(id);
+					id = Mongo.createObjectIDFromHexString(id);
 				}
 			default://Nothing, keep the id
 		}
@@ -191,7 +213,7 @@ class MongoTools
 		});
 	}
 	
-	public static function findAll<T>(pool :MongoPool, type :Class<T>, field :String, val :Dynamic, cb :MongoErr->Array<T>->Void) :Void
+	public static function findAll<T>(pool :MongoPool, type :Class<T>, field :String, val :Dynamic, limit :Int, sort :Bool, ascending :Bool, cb :MongoErr->Array<T>->Void) :Void
 	{
 		var klsName = Type.getClassName(type);
 		pool.connection(function (c :Database) {
@@ -200,10 +222,16 @@ class MongoTools
 				
 				var objs :Array<T> = [];
 				
-				var meta :MongoMeta = {skip:0, limit:0, sort:null};
+				var meta :MongoMeta = {skip:0, limit:limit, sort:null};
+				if (sort) {
+					meta.sort = {};
+					Reflect.setField(meta.sort, field, ascending ? 1 : -1);
+				}
 				
 				var query = {};
-				Reflect.setField(query, field, val);
+				if (field != null) {
+					Reflect.setField(query, field, val);
+				}
 		
 				collection.find(query, null, meta, function (err :MongoErr, cursor :Cursor) {
 					cursor.each(function (err :MongoErr, rec :MongoObj) {
@@ -223,17 +251,26 @@ class MongoTools
 	
 	static function findInternal<T>(pool :MongoPool, type :Class<T>, query :Dynamic, cb :MongoErr->T->Void) :Void
 	{
+		org.transition9.util.Assert.isNotNull(pool, ' pool is null');
+		org.transition9.util.Assert.isNotNull(type, ' type is null');
 		var klsName = Type.getClassName(type);
 		pool.connection(function (c :Database) {
 			c.collection(klsName, function (err :MongoErr, collection :Collection) {
 				if (returnIfError(err, cb, pool, c)) return;
 			
+				org.transition9.util.Assert.isNotNull(collection, ' collection is null');
+				
 				collection.findOne(query, function (err :MongoErr, rec :MongoObj) {
 					if (returnIfError(err, cb, pool, c)) return;
 					
 					pool.returnConnection(c);
-					var obj :T = docToClass(rec, type);
-					cb(null, obj);
+					
+					if (rec == null) {
+						cb(null, null);
+					} else {
+						var obj :T = docToClass(rec, type);
+						cb(null, obj);
+					}
 				});
 			});
 		});
@@ -255,14 +292,14 @@ class MongoTools
 	/**
 	  * If the object had a String _id of length 24, convert to a native ObjectID
 	  */
-	inline static function classToDoc (obj :Dynamic) :Dynamic
+	public static function classToDoc (obj :Dynamic) :Dynamic
 	{
 		var rec :MongoObj = Serialization.classToDoc(obj);
 		if (Reflect.field(obj, "_id") != null) {
 			switch(Type.typeof(Reflect.field(obj, "_id"))) {
 				case TClass(c):
 					if (c == String && Reflect.field(obj, "_id").length == 24) {
-						Reflect.setField(rec, "_id", Mongo.ObjectID(Reflect.field(obj, "_id")));
+						Reflect.setField(rec, "_id", Mongo.createObjectIDFromHexString(Reflect.field(obj, "_id")));
 					}
 				default://Nothing, keep the id
 			}
@@ -270,10 +307,17 @@ class MongoTools
 		return rec;
 	}
 	
-	inline static function docToClass (rec :Dynamic, cls :Class<Dynamic>) :Dynamic
+	public static function docToClass (rec :Dynamic, cls :Class<Dynamic>) :Dynamic
 	{
-		return Serialization.docToClass(rec, cls);
+		org.transition9.util.Assert.isNotNull(rec, ' rec is null ' + haxe.Stack.toString(haxe.Stack.callStack()));
+		org.transition9.util.Assert.isNotNull(cls, ' cls is null');
+		var obj = Serialization.docToClass(rec, cls);
+		org.transition9.util.Assert.isNotNull(obj, ' obj is null');
+		Reflect.setField(obj, "_id", Reflect.field(rec, "_id"));
+		org.transition9.util.Assert.isNotNull(obj._id, ' obj._id is null');
+		return obj;
 	}
 	
 	static var EMPTY_ARRAY :Array<Dynamic> = [];
+	static var EMPTY_OPTIONS :Dynamic = {};
 }

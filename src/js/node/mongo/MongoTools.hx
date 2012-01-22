@@ -100,7 +100,6 @@ class MongoTools
 					
 					pool.returnConnection(c);
 					Reflect.setField(obj, "_id", rec._id);
-					// trace("created " + klsName + ", returning " + obj);
 					cb(null, obj);
 				});
 			});
@@ -159,6 +158,17 @@ class MongoTools
 					pool.returnConnection(c);
 					cb(null, true);	
 				});
+			});
+		});
+	}
+	
+	public static function removeAll (pool :MongoPool, type :Class<Dynamic>, cb :MongoErr->Null<Bool>->Void) :Void
+	{
+		var klsName = Type.getClassName(type);
+		pool.connection(function (c :Database) {
+			c.dropCollection(klsName, function (err :MongoErr, done :Bool) {
+				pool.returnConnection(c);
+				cb(err, err != null);	
 			});
 		});
 	}

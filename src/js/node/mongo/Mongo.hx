@@ -33,6 +33,7 @@ typedef Database = {
 	function dropDatabase (cb :MongoErr->Dynamic->Void) :Void;
 	function collection (name :String, cb :MongoErr->Collection->Void) :Void;
 	function createCollection (name :String, cb :MongoErr->Collection->Void) :Void;
+	function dropCollection (name :String, cb :MongoErr->Bool->Void) :Void;
 	function getStatus() :String;
 	function lastStatus(cb :Dynamic->Dynamic->Void) :Void;
 }
@@ -69,16 +70,7 @@ typedef Collection = {
 	function save(d :MongoObj, options :MongoOptions, cb :MongoErr->MongoObj->Void) :Void;
 }
 
-
-//GridFS
-typedef GridFileRef=Dynamic;
-
 typedef GridStore = {
-//mongodb/gridfs/gridstore
-// @:native("mongodb.GridStore")
-// extern class GridStore 
-// {
-	// function new (db :Database, filename :String, mode :String, ?options :MongoOptions) :Void;
 	var chunkSize :Int;
 	var md5 :String;
 	function open (cb :MongoErr->GridStore->Void) :Void;
@@ -86,14 +78,13 @@ typedef GridStore = {
 	function write (data :Dynamic, ?close :Bool, cb :MongoErr->GridStore->Void) :Void;
 	function writeBuffer (data :Dynamic, ?close :Bool, cb :MongoErr->GridStore->Void) :Void;
 	function close (cb :MongoErr->GridStore->Void) :Void;
-	//nthChunk
-	//lastChunkNumber
-	//chunkCollection
-	//rewind
-	//read
+	function read (?length :Int, ?buffer :String, cb :MongoErr->String->Void) :Void;
 	function readlines (sep :String, cb :MongoErr->Array<String>->Void) :Void;
 	
 }
+
+//GridFS
+typedef GridFileRef=Dynamic;
 
 typedef Grid = {
 	function put (data :Dynamic, options :Dynamic, cb :MongoErr->GridFileRef->Void) :Void;
@@ -101,9 +92,21 @@ typedef Grid = {
 	function delete (id :ObjectID, cb :MongoErr->Bool->Void) :Void;
 }
 
+/** Static methods from GridStore */
+typedef GridFS = {
+	function readlines(db :Database, fileName :String, seperator :String, options :MongoQuery, cb :MongoErr->Array<String>->Void) :Void;	
+}
+
+/** Static methods from GridStore */
+typedef ObjectIdStatic = {
+	function generate() :ObjectID;	
+}
+
 class Mongo
 {
 	public static var mongo :Dynamic;
+	public static var grid :GridFS;
+	public static var objectID :ObjectIdStatic;
 	
 	public static function createObjectIDFromHexString (s :String) :ObjectID
 	{
@@ -126,7 +129,7 @@ class Mongo
 	static function __init__ () :Void
 	{
 		mongo = Node.require('mongodb');
+		grid = mongo.GridStore;
+		objectID = mongo.ObjectID;
 	} 
 }
-
-

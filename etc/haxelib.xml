@@ -1,7 +1,7 @@
 <project name="nodejs-mongo" url="https://github.com/dionjwa/haxe-nodejs-mongo" license="BSD">
         <user name="dionjwa"/>
         <description>MongoDB Node.js externs and object store to add, index, and retrieve Haxe objects.</description>
-        <version name="0.3">Added transition9 dependency</version>
+        <version name="0.4">Added transition9 dependency</version>
         <depends name="transition9"/>
         <depends name="nodejs"/>
         <tag v="nodejs"/>

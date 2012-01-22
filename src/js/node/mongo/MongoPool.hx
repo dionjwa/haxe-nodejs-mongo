@@ -1,6 +1,7 @@
 package js.node.mongo;
 
 import js.node.mongo.Mongo;
+
 import org.transition9.async.AsyncLambda;
 
 class MongoPool 
@@ -39,18 +40,24 @@ class MongoPool
 				if (err != null) trace(Std.string(err));
 				if (self.ready != null) {
 					self.ready();
-				} else {
-					//trace("ready, but there's no ready callback, FYI");
 				}
 			});
 	}
 	
 	public function close (cb :Void->Void) :Void
 	{
-		for (conn in connections) {
-			conn.close(function(?_) {});
-		}
-		cb();
+		AsyncLambda.iter(
+			connections, 
+			function (conn, onClose :Void->Void) {
+				conn.close(function(err) {
+					if (err != null) trace("Error on connection close: " + err);
+					onClose();
+				});
+			},
+			function (err) {
+				if (err != null) trace("Error on connection close: " + err);
+				cb();
+			});
 	}
 
 	function addConnection(onAddition :Void->Void) 

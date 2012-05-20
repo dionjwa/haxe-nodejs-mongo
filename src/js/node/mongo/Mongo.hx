@@ -59,7 +59,7 @@ typedef Cursor = {
 typedef Collection = {
 	function insert(rec :MongoObj, cb :MongoErr->MongoObj->Void) :Void;
 	function insertMany(recs :Array<MongoObj>, cb :MongoErr->Array<MongoObj>->Void) :Void;
-	function count(cb :MongoErr->Int->Void) :Void;
+	function count(?query :MongoQuery, cb :MongoErr->Int->Void) :Void;
 	function remove(query :MongoObj, ?options :Dynamic, cb :Void->Void) :Void;
 	function find(?query :MongoQuery, options :MongoQuery, ?meta :MongoMeta, cb :MongoErr->Cursor->Void) :Void;
 	function findOne(?query :MongoQuery, cb :MongoErr->MongoObj->Void) :Void;
